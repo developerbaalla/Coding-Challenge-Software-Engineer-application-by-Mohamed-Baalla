@@ -4,12 +4,10 @@ namespace App\Repositories;
 
 use App\Product;
 
-class ProductRepository implements ProductRepositoryInterface
+class ProductRepository 
 {
-	public function all()
+	public function all($sortby = 'created_at', $sorttype = 'desc')
 	{
-		$sortby = !empty(request()->input('sort'))? request()->input('sort'): 'created_at';
-		$sorttype = !empty(request()->input('sort'))? 'asc': 'desc';
 
 		return Product::with('categories')
 			->orderBy($sortby, $sorttype)
@@ -18,15 +16,14 @@ class ProductRepository implements ProductRepositoryInterface
 
 	public function findById($id)
 	{
+
 		return Product::where('id', $id)
 		->with('categories')
 		->first();
 	}
 
-	public function findByCategory($category)
+	public function findByCategory($category, $sortby = 'created_at', $sorttype = 'desc')
 	{
-		$sortby = !empty(request()->input('sort'))? request()->input('sort'): 'created_at';
-		$sorttype = !empty(request()->input('sort'))? 'asc': 'desc';
 
 		return Product::with('categories')
 			->orderBy($sortby, $sorttype)
@@ -35,30 +32,30 @@ class ProductRepository implements ProductRepositoryInterface
 		    })->get();
 	}
 
-	public function create($imageName)
+	public function save($data)
 	{
         $product = new Product;
 
-        $product->name = request()->input('name');
-        $product->description = request()->input('description');
-        $product->price = request()->input('price');
-        $product->image = $imageName;
+        $product->name = $data['name'];
+        $product->description = $data['description'];
+        $product->price = $data['price'];
+        $product->image = $data['image'];
 
         $product->save();
 
     	// attach categories
-    	$product->categories()->attach(request()->input('category_id'));
+    	$product->categories()->attach( $data['category_id'] );
 
 	}
 
-	public function update($id)
+	public function update($id, $data)
 	{
 		$product = Product::where('id', $id)->firstOrFail();
-		$product->update(request()->only('name', 'price', 'description'));
+		$product->update($data);
 	}
 
 	public function delete($id)
 	{
-		Product::where('id', $id)->delete();
+		return Product::where('id', $id)->delete();
 	}
 }

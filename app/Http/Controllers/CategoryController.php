@@ -2,8 +2,7 @@
 
 namespace App\Http\Controllers;
 
-use App\Product;
-use App\Repositories\CategoryRepositoryInterface;
+use App\Services\CategoryService;
 use Illuminate\Http\Request;
 
 class CategoryController extends Controller
@@ -11,14 +10,14 @@ class CategoryController extends Controller
 
     /**
      *
-     * @var App\Repositories\CategoryRepositoryInterface
+     * @var App\Services\CategoryService
      */
-    private $categoryRepository;
+    private $categoryService;
 
 
-    public function __construct(CategoryRepositoryInterface $categoryRepository)
+    public function __construct(CategoryService $categoryService)
     {
-        $this->categoryRepository = $categoryRepository;
+        $this->categoryService = $categoryService;
     }
 
     /**
@@ -28,7 +27,7 @@ class CategoryController extends Controller
      */
     public function index()
     {
-        $categories = $this->categoryRepository->categoriesWithChildren();
+        $categories = $this->categoryService->getCategoriesWithChildren();
         return view('category.index', compact('categories'));
     }
 
@@ -39,7 +38,7 @@ class CategoryController extends Controller
      */
     public function create()
     {
-        $categories = $this->categoryRepository->list();
+        $categories = $this->categoryService->getList();
         return view('category.create', compact('categories'));
     }
 
@@ -51,12 +50,27 @@ class CategoryController extends Controller
      */
     public function store(Request $request)
     {
-        $this->validate($request, [
-            'name' => 'required'
+
+        $data = $request->only([
+            'name',
+            'parent_category'
         ]);
-        
-        $categories = $this->categoryRepository->create();
-        return redirect('category')->with('success', 'It is created');
+
+        try { 
+            $result['data'] = $this->categoryService->saveCategory($data);
+            $result = [
+                'status' => 'success',
+                'msg' => 'It is created'
+            ];
+        } 
+        catch (Exception $e) { 
+            $result = [
+                'status' => 'error', 
+                'msg' => $e->getMessage()
+            ];
+        } 
+
+        return redirect('category')->with($result['status'], $result['msg']);
     }
 
     /**
@@ -67,7 +81,7 @@ class CategoryController extends Controller
      */
     public function destroy($id)
     {
-        $this->categoryRepository->delete($id);
+        $this->categoryService->delete($id);
         return redirect('category');
     }
 }

@@ -3,23 +3,26 @@
 namespace App\Http\Controllers;
 
 use App\Product;
-use App\Repositories\ProductRepositoryInterface;
-use App\Repositories\CategoryRepositoryInterface;
+use App\Services\ProductService;
+use App\Services\CategoryService;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Validator;
+use Exception;
+use InvalidArgumentException;
 
 class ProductController extends Controller
 {
 
     /**
      *
-     * @var App\Repositories\ProductRepositoryInterface
+     * @var App\Services\ProductService
      */
-    private $productRepository;
+    private $productService;
 
 
-    public function __construct(ProductRepositoryInterface $productRepository)
+    public function __construct(ProductService $productService)
     {
-        $this->productRepository = $productRepository;
+        $this->productService = $productService;
     }
 
     /**
@@ -27,16 +30,18 @@ class ProductController extends Controller
      *
      * @return \Illuminate\Http\Response
      */
-    public function index(Request $request, CategoryRepositoryInterface $categories)
+    public function index(Request $request, CategoryService $categoryService)
     {
 
-        if ($request->input('category')) {
-            $products = $this->productRepository->findByCategory( $request->input('category') );
-        }else{
-            $products = $this->productRepository->all();
-        }
+        $data = $request->only([
+            'sort',
+            'category'
+        ]);
 
-        $categories = $categories->list();
+        $products = $this->productService->getAll( $data );
+
+        $categories = $categoryService->getList();
+
         return view('product.index', compact('products', 'categories'));
     }
 
@@ -45,9 +50,9 @@ class ProductController extends Controller
      *
      * @return \Illuminate\Http\Response
      */
-    public function create(CategoryRepositoryInterface $categories)
+    public function create(CategoryService $categoryService)
     {
-        $categories = $categories->list();
+        $categories = $categoryService->getList();
         return view('product.create', compact('categories'));
     }
 
@@ -59,22 +64,32 @@ class ProductController extends Controller
      */
     public function store(Request $request)
     {
-        $this->validate($request, [
-            // required
-            'name' => 'required',
-            'description' => 'required|max:212',
-            
-            // Validate that a provided integer equals 10...
-            'price' => 'required|numeric',
 
-            // Validate that an uploaded file is exactly 512 kilobytes...
-            'image' => 'required|image|mimes:jpeg,png,jpg,gif,svg|max:2048',
+        $data = $request->only([
+            'name',
+            'description', 
+            'price', 
+            'image', 
+            'category_id', 
         ]);
-        
-        // creat product function needs imageName
-        $this->productRepository->create( $this->imageUpload($request->file('image')) );
 
-        return redirect('product')->with('success', 'It is created');
+        try { 
+            $result['data'] = $this->productService->saveProduct($data);
+            $result = [
+                'redirect' => 'product', 
+                'status' => 'success',
+                'msg' => 'It is created'
+            ];
+        } 
+        catch (Exception $e) { 
+            $result = [
+                'redirect' => 'product.create', 
+                'status' => 'error', 
+                'msg' => $e->getMessage()
+            ];
+        } 
+
+        return redirect()->route($result['redirect'])->with($result['status'], $result['msg']);
     }
 
     /**
@@ -85,7 +100,7 @@ class ProductController extends Controller
      */
     public function show($id)
     {
-        $product = $this->productRepository->findById($id);
+        $product = $this->productService->findById($id);
         return view('product.show', compact('product'));
     }
 
@@ -97,7 +112,7 @@ class ProductController extends Controller
      */
     public function edit($id)
     {
-        $product = $this->productRepository->findById($id);
+        $product = $this->productService->findById($id);
         return view('product.edit', compact('product'));
     }
 
@@ -108,22 +123,34 @@ class ProductController extends Controller
      * @param  int  $id
      * @return \Illuminate\Http\Response
      */
-    public function update(Request $request, $id)
+    public function update($id, Request $request)
     {
-        $this->validate($request, [
-            // required
-            'name' => 'required',
-            'description' => 'required|max:212',
-            
-            // Validate that a provided integer equals 10...
-            'price' => 'required|numeric',
 
-            // Validate that an uploaded file is exactly 512 kilobytes...
-            'image' => 'nullable|image|mimes:jpeg,png,jpg,gif,svg|max:2048',
+        $data = $request->only([
+            'name',
+            'description', 
+            'price', 
+            'image', 
+            'category_id', 
         ]);
 
-        $product = $this->productRepository->update($id);
-        return redirect('product')->with('success', 'It is done');
+        try { 
+            $result['data'] = $this->productService->updateProduct($id, $data);
+            $result = [
+                'redirect' => 'product', 
+                'status' => 'success',
+                'msg' => 'It is created'
+            ];
+        } 
+        catch (Exception $e) { 
+            $result = [
+                'redirect' => 'product.edit', 
+                'status' => 'error', 
+                'msg' => $e->getMessage()
+            ];
+        } 
+
+        return redirect()->route($result['redirect'], $id)->with($result['status'], $result['msg']);
     }
 
     /**
@@ -134,17 +161,8 @@ class ProductController extends Controller
      */
     public function destroy($id)
     {
-        $this->productRepository->delete($id);
-        return redirect('/product/')->with('success', 'It is done');
+        $this->productService->delete($id);
+        return redirect('product')->with('success', 'It is done');
     }
 
-
-    public function imageUpload($file)
-    {
-
-        $imageName = time().'.'.$file->extension();
-        $file->move(public_path('images'), $imageName);
-
-        return $imageName;
-    }
 }

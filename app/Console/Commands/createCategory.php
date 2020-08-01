@@ -3,11 +3,17 @@
 namespace App\Console\Commands;
 
 use Illuminate\Console\Command;
-use App\Repositories\CategoryRepositoryInterface;
+use App\Services\CategoryService;
 use Illuminate\Http\Request;
 
 class createCategory extends Command
 {
+    /**
+     *
+     * @var App\Services\CategoryService
+     */
+    protected $categoryService;
+
     /**
      * The name and signature of the console command.
      *
@@ -27,8 +33,9 @@ class createCategory extends Command
      *
      * @return void
      */
-    public function __construct()
+    public function __construct(CategoryService $categoryService)
     {
+        $this->categoryService = $categoryService;
         parent::__construct();
     }
 
@@ -37,21 +44,22 @@ class createCategory extends Command
      *
      * @return int
      */
-    public function handle(Request $request, CategoryRepositoryInterface $category)
+    public function handle()
     {
-        $categories = $category->list();
-        $catsKeys = array_keys(reset($categories));
-        $catsKeys[] = 'keep_Empty';
+        $categories = $this->categoryService->getList();
+        $categoriesId = array_keys(reset($categories));
+        $categoriesId[] = 'keep_Empty';
 
         do { $name = $this->ask('What is the category name?'); } while ( !$name or strlen($name) > 250 );
 
-        print_r(reset($categories));
-        $parent_category = $this->choice('What is the parent_category?', $catsKeys);
-        $parent_category = (!empty($parent_category)? $parent_category: '');
+        // print_r(reset($categories));
+        $parentCategory = $this->choice('What is the parent_category?', $categoriesId);
+        $parentCategory = (!empty($parentCategory)? $parentCategory: '');
 
-        $request->merge(["name"=>$name, "parent_category"=>(($parent_category!='keep_Empty')? $parent_category: null)]);
-
-        $category = $category->create();
+        $category = $this->categoryService->saveCategory([
+            "name"=> $name, 
+            "parent_category"=> (($parentCategory!='keep_Empty')? $parentCategory: null)
+        ]);
 
         $this->info("category created!");
     }

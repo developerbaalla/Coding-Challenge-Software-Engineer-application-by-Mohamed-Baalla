@@ -3,11 +3,17 @@
 namespace App\Console\Commands;
 
 use Illuminate\Console\Command;
-use App\Repositories\CategoryRepositoryInterface;
+use App\Services\CategoryService;
 use Illuminate\Http\Request;
 
 class deleteCategory extends Command
 {
+    /**
+     *
+     * @var App\Services\CategoryService
+     */
+    protected $categoryService;
+
     /**
      * The name and signature of the console command.
      *
@@ -27,8 +33,9 @@ class deleteCategory extends Command
      *
      * @return void
      */
-    public function __construct()
+    public function __construct(CategoryService $categoryService)
     {
+        $this->categoryService = $categoryService;
         parent::__construct();
     }
 
@@ -37,9 +44,9 @@ class deleteCategory extends Command
      *
      * @return int
      */
-    public function handle(Request $request, CategoryRepositoryInterface $category)
+    public function handle()
     {
-        $category = $category->delete($this->argument('category_id'));
+        $category = $this->categoryService->delete($this->argument('category_id'));
         $this->info("Category deleted!");
     }
 }

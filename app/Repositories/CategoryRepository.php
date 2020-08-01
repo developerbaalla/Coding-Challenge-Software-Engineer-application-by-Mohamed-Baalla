@@ -4,8 +4,38 @@ namespace App\Repositories;
 
 use App\Category;
 
-class CategoryRepository implements CategoryRepositoryInterface
+class CategoryRepository
 {
+	/**
+	 * @var $category
+	 */
+	protected $category;
+
+
+	/**
+	 * CategoryRepository constructor
+	 *
+	 * @param Category $category
+	 */
+	public function __construct(Category $category)
+	{
+		$this->category = $category;
+	}
+
+
+	public function save($data)
+	{
+
+        $category = new $this->category;
+
+        $category->name = $data['name'];
+        $category->parent_category = $data['parent_category'];
+
+        $category->save();
+
+        return $category->fresh();
+	}
+
 	public function all()
 	{
 		return Category::all()
@@ -21,19 +51,9 @@ class CategoryRepository implements CategoryRepositoryInterface
 	public function categoriesWithChildren()
 	{
 		return Category::with('childrenRecursive')
-			->whereNull('parent_category')
+			// ->whereNull('parent_category')
 			->orderBy('name', 'asc')
-			->get();
-	}
-
-	public function create()
-	{
-        $category = new Category;
-
-        $category->name = request()->input('name');
-        $category->parent_category = request()->input('parent_category');
-
-        $category->save();
+			->get(); 
 	}
 
 	public function delete($id)
