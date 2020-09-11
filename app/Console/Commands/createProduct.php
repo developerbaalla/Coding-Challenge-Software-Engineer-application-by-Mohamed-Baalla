@@ -16,6 +16,12 @@ class createProduct extends Command
     protected $productService;
 
     /**
+     *
+     * @var App\Services\CategoryService
+     */
+    protected $categoryService;
+
+    /**
      * The name and signature of the console command.
      *
      * @var string
@@ -34,9 +40,10 @@ class createProduct extends Command
      *
      * @return void
      */
-    public function __construct(ProductService $productService)
+    public function __construct(ProductService $productService, CategoryService $categoryService)
     {
-        $this->productService = $productService;
+        $this->productService = $productService; 
+        $this->categoryService = $categoryService; 
         parent::__construct();
     }
 
@@ -45,24 +52,35 @@ class createProduct extends Command
      *
      * @return int
      */
-    public function handle(CategoryService $categoryService)
+    public function handle()
     {
-        $categories = $categoryService->getList();
+        $categories = $this->categoryService->getList();
 
-        do { $name = $this->ask('What is the product name?'); } while ( !$name or strlen($name) > 250 );
-        do { $description = $this->ask('What is the product description?'); } while ( !$description or strlen($description) > 250 );
-        do { $price = $this->ask('What is the product price?'); } while ( !is_numeric($price) or $price <= 0 );
-        do { $image = $this->ask('Move image to '.public_path('images').' And put Image Name?'); } while ( !is_file(public_path('images').'/'.$image) );
+        do { 
+            $name = $this->ask('What is the product name?'); 
+        } while ( !$name or strlen($name) > 250 );
+
+        do { 
+            $description = $this->ask('What is the product description?'); 
+        } while ( !$description or strlen($description) > 250 );
+
+        do { 
+            $price = $this->ask('What is the product price?'); 
+        } while ( !is_numeric($price) or $price <= 0 );
+
+        do { 
+            $image = $this->ask('Move image to '.public_path('images').' And put Image Name?'); 
+        } while ( !is_file(public_path('images').'/'.$image) );
         
         // print_r(reset($categories));
-        $category_id = $this->choice('What is the product category_id?', array_keys(reset($categories)));
+        $categoryId = $this->choice('What is the product category_id?', array_keys(reset($categories)));
 
         $product = $this->productService->saveProduct([
-            "name"=>$name, 
-            "description"=>$description, 
-            "price"=>$price, 
-            "image"=>$image, 
-            "category_id"=>$category_id
+            "name" => $name, 
+            "description" => $description, 
+            "price" => $price, 
+            "image" => $image, 
+            "category_id" => $categoryId
         ]);
 
         $this->info("Product created!");

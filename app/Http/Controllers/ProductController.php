@@ -19,10 +19,17 @@ class ProductController extends Controller
      */
     private $productService;
 
+    /**
+     *
+     * @var App\Services\CategoryService
+     */
+    private $categoryService;
 
-    public function __construct(ProductService $productService)
+
+    public function __construct(ProductService $productService,CategoryService $categoryService)
     {
         $this->productService = $productService;
+        $this->categoryService = $categoryService;
     }
 
     /**
@@ -30,7 +37,7 @@ class ProductController extends Controller
      *
      * @return \Illuminate\Http\Response
      */
-    public function index(Request $request, CategoryService $categoryService)
+    public function index(Request $request)
     {
 
         $data = $request->only([
@@ -40,7 +47,7 @@ class ProductController extends Controller
 
         $products = $this->productService->getAll( $data );
 
-        $categories = $categoryService->getList();
+        $categories = $this->categoryService->getList();
 
         return view('product.index', compact('products', 'categories'));
     }
@@ -50,9 +57,9 @@ class ProductController extends Controller
      *
      * @return \Illuminate\Http\Response
      */
-    public function create(CategoryService $categoryService)
+    public function create()
     {
-        $categories = $categoryService->getList();
+        $categories = $this->categoryService->getList();
         return view('product.create', compact('categories'));
     }
 
@@ -72,7 +79,7 @@ class ProductController extends Controller
             'image', 
             'category_id', 
         ]);
-
+        
         try { 
             $result['data'] = $this->productService->saveProduct($data);
             $result = [
@@ -89,7 +96,7 @@ class ProductController extends Controller
             ];
         } 
 
-        return redirect()->route($result['redirect'])->with($result['status'], $result['msg']);
+       return redirect()->route($result['redirect'])->with($result['status'], $result['msg']);
     }
 
     /**

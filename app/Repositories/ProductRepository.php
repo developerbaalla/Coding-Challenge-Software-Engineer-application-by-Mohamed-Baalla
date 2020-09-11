@@ -6,7 +6,15 @@ use App\Product;
 
 class ProductRepository 
 {
-	public function all($sortby = 'created_at', $sorttype = 'desc')
+
+    /**
+     * Get All Products.
+     *
+     * @param  Product  $sortby
+     * @param  Product  $sorttype
+     * @return array
+     */
+	public function all(string $sortby = 'created_at', string $sorttype = 'desc')
 	{
 
 		return Product::with('categories')
@@ -14,7 +22,13 @@ class ProductRepository
 			->get();
 	}
 
-	public function findById($id)
+    /**
+     * find By Id Product.
+     *
+     * @param  Product  $id
+     * @return array
+     */
+	public function findById(int $id)
 	{
 
 		return Product::where('id', $id)
@@ -22,40 +36,69 @@ class ProductRepository
 		->first();
 	}
 
-	public function findByCategory($category, $sortby = 'created_at', $sorttype = 'desc')
+    /**
+     * find By Category Product.
+     *
+     * @param  Product  $categoryId
+     * @param  Product  $sortby
+     * @param  Product  $sorttype
+     * @return array
+     */
+	public function findByCategory(int $categoryId, string $sortby = 'created_at', string $sorttype = 'desc')
 	{
 
 		return Product::with('categories')
 			->orderBy($sortby, $sorttype)
-		    ->whereHas('categories', function($q) use ($category) {
-		        $q->where('category_id', $category);
+		    ->whereHas('categories', function($q) use ($categoryId) {
+		        $q->where('category_id', $categoryId);
 		    })->get();
 	}
 
-	public function save($data)
+    /**
+     * Save a newly created resource in storage.
+     *
+     * @param  Product  $data
+     * @return bool
+     */
+	public function save(array $data)
 	{
-        $product = new Product;
 
-        $product->name = $data['name'];
-        $product->description = $data['description'];
-        $product->price = $data['price'];
-        $product->image = $data['image'];
-
-        $product->save();
+        $res = Product::insert([
+			Product::NAME => $data['name'],
+        	Product::DESCRIPTION => $data['description'],
+        	Product::PRICE => $data['price'],
+        	Product::IMAGE => $data['image'],
+		]);
 
     	// attach categories
     	$product->categories()->attach( $data['category_id'] );
 
+		return $res;
 	}
 
-	public function update($id, $data)
+    /**
+     * Update Product.
+     *
+     * @param  Product  $id
+     * @param  Product  $data
+     * @return bool
+     */
+	public function update(int $id, array $data)
 	{
+
 		$product = Product::where('id', $id)->firstOrFail();
-		$product->update($data);
+		return $product->update($data);
 	}
 
-	public function delete($id)
+    /**
+     * Delete Product.
+     *
+     * @param  Product  $id
+     * @return bool
+     */
+	public function delete(int $id)
 	{
+
 		return Product::where('id', $id)->delete();
 	}
 }

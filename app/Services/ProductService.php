@@ -27,7 +27,13 @@ class ProductService
 	}
 
 
-	public function getAll($data)
+    /**
+     * Get All Products.
+     *
+     * @param  Product  $data
+     * @return array
+     */
+	public function getAll(array $data = [])
 	{
 		$sortby = !empty( $data['sort'] )? $data['sort']: 'created_at';
 
@@ -46,7 +52,13 @@ class ProductService
 	}
 
 
-	public function saveProduct($data)
+    /**
+     * Save a newly created resource in storage.
+     *
+     * @param  Product  $data
+     * @return bool
+     */
+	public function saveProduct(array $data = [])
 	{
 
 		$validator = Validator::make($data, $this->rules());
@@ -66,7 +78,14 @@ class ProductService
 	}
 
 
-	public function updateProduct($id, $data)
+    /**
+     * Update Product.
+     *
+     * @param  Product  $id
+     * @param  Product  $data
+     * @return bool
+     */
+	public function updateProduct(int $id, array $data = [])
 	{
 
 		$validator = Validator::make($data, $this->rules());
@@ -86,24 +105,47 @@ class ProductService
 	}
 
 
+    /**
+     * Get List Products.
+     *
+     * @return array
+     */
 	public function getList()
 	{
 		return $this->productRepository->list();
 	}
 
 
+    /**
+     * find By Id Product.
+     *
+     * @param  Product  $id
+     * @return array
+     */
 	public function findById($id)
 	{
 		return $this->productRepository->findById($id);
 	}
 
 
+    /**
+     * delete By Id Product.
+     *
+     * @param  Product  $id
+     * @return bool
+     */
 	public function delete($id)
 	{
 		return $this->productRepository->delete($id);
 	}
 
 
+    /**
+     * Save Files related with Product.
+     *
+     * @param  Product  $file
+     * @return string
+     */
     public function imageUpload($file)
     {
 
@@ -114,6 +156,11 @@ class ProductService
     }
 
 
+    /**
+     * rules to validate product.
+     *
+     * @return array
+     */
     public function rules()
     {
         return [
