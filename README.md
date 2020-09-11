@@ -1,4 +1,4 @@
-<p align="center" style="background: #6f4899; margin: 20px;"><img src="http://nextmedia.ma/assets/img/logo.png" width="400">Next Media</p>
+<p align="center"><img src="http://nextmedia.ma/assets/img/loading.gif" width="400">Next Media</p>
 
 <p align="center">
 <a href="#"><img src="https://travis-ci.org/laravel/framework.svg" alt="Build Status"></a>
