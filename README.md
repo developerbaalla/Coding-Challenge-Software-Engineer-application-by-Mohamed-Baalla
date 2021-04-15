@@ -1,4 +1,3 @@
-<p align="center"><img src="http://nextmedia.ma/assets/img/loading.gif" width="400">Next Media</p>
 
 <p align="center">
 <a href="#"><img src="https://travis-ci.org/laravel/framework.svg" alt="Build Status"></a>
